@@ -7,73 +7,67 @@ Mostly, these fill in a few gaps in functionality that I feel are important enou
 If you want the nanoruby (NanoGPT nodes) then you can find them in their own repo once I publish them; they are taking longer. 
 
 ### Utilities:
-Hash: HMAC tool,
-(Use inputs to perform an HMAC function hash on a message with a key)
-Hash: SHA-256
-(Hash a string with SHA-256)
-Image Hash
-(Hash an image using SHA-256, and cache it for later use)
-Auto Tag Formatting
-(Formatting for creating tag index text files when tagging for e.g. hydrus)
-Filename Save Aide
-(Creates a consistent nested folder structure based on the date for quick save file formatting)
-Regex Switch
-(Select an output based on a regex pattern match)
-Denoise/Seed Iterator
-(Iterates through denoise values between a floor and 1.0, then increments seed. Optionally uses a fixed denoise value and iterates seed every step instead. Supports auto-increment mode for self-contained iteration. For testing denoise values across thresholds without needing to stop an infinite generation loop, as it will pick a new seed and keep trying another cycle.)
-Preset Text
-(Create presets in a json instead of weird in-app text fields that are hard to edit programatically. Based on pyyyys' preset node, but done totally differently with an external json source file and better organization of presets.)
-Preset Text Multi
-(Combine multiple presets with a separator, same source as Preset Text)
-Sequential Image Load From Folder (no batching)
-(Loads images from a folder one at a time, and increments a counter for each image loaded, useful for tagging image sets without needing to re-size or batch images, and indexes all of them so you can compare the tag index to the image index.)
+- Hash: HMAC tool  
+  Use inputs to perform an HMAC hash on a message with a key.
+
+- Hash: SHA-256  
+  Hash a string with SHA-256.
+
+- Image Hash  
+  Hash an image with SHA-256 and cache it.
+
+- Auto Tag Formatting  
+  Format tag index text entries for workflows like Hydrus.
+
+- Filename Save Aide  
+  Create a consistent date-based nested folder structure.
+
+- Regex Switch  
+  Select an output based on a regex pattern match.
+
+- Denoise/Seed Iterator  
+  Iterate denoise values between a floor and 1.0, then increment seed.
+
+- Preset Text  
+  Load presets from JSON instead of editing long in-app text fields.
+
+- Preset Text Multi  
+  Combine multiple presets with a separator.
+
+- Sequential Image Load From Folder (no batching)  
+  Load one image per run and increment an index.
 
 ### String/Json Utilities:
-Integer to String,
-1 -> "1"
-Float to String,
-0.5 -> "0.5"
-String to Int,
-"1" -> 1
-String to Float,
-"0.5" -> 0.5
-Boolean to String,
-True -> "true"
-False -> "false"
-Hex to Integer,
-"0x1A" -> 26
-Integer to Hex
-26 -> "0x1A"
-Bypass Switch
-(Bypass a node's output based on a boolean input), (based on the rgthree node set with similar naming)
-String Concatenate (3, 4, 6)
-(Need to concatenate more than 2 strings and tired of wiring together fifty concatenates? Then this is for you.)
-Mixed Int/Str Concatenate (4),
-(Need to mix in integers? Then this will work for that but not for certain other things)
-Iterate Float,
-(Similar to the denoise iterator, but is a simple floor + ceiling iteration for just a float of whatever)
-Iterate Int,
-(Same but for integers)
-Extract JSON Field,
-(Extract a field from a json string and return it as a non-json string. Used for LLM responses)
-Format JSON Utility,
-(Format a json string for easy reading and appending to a file)
+- Integer to String: `1 -> "1"`
+- Float to String: `0.5 -> "0.5"`
+- String to Int: `"1" -> 1`
+- String to Float: `"0.5" -> 0.5`
+- Boolean to String: `True -> "true"` / `False -> "false"`
+- Hex to Integer: `"0x1A" -> 26`
+- Integer to Hex: `26 -> "0x1A"`
+- Bypass Switch: bypass a node output using a boolean toggle.
+- String Concatenate (3, 4, 6): combine multiple string inputs.
+- Mixed Int/Str Concatenate (4): concatenate mixed numeric and string inputs.
+- Iterate Float: simple float floor/ceiling iterator.
+- Iterate Int: simple integer iterator.
+- Extract JSON Field: return a field from JSON as plain text.
+- Format JSON Utility: format JSON text for readability and file appends.
 
 ### RPG-Related:
 #### These are random RPG-related nodes that I was trying to make for a procedural comfyui-constrained RPG engine.  
-Character Card,
-Context Card,
-Session Memory (RP),
-Memory Store (RP),
-Memory Init (RP)
+- Character Card
+- Context Card
+- Session Memory (RP)
+- Memory Store (RP)
+- Memory Init (RP)
 
 ### Memory Related:
 #### I was using text files to store memory addresses for some complicated node chains, and wanted to skip the middle man. 
-Simple Memory,
-Simple File,
-Text Load,
-Text Save, 
-Text Show,
+- Simple Memory
+- Simple File
+- Text Load
+- Text Save
+- Text Show
 
 
 
