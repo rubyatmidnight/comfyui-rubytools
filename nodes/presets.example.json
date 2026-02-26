@@ -1,0 +1,28 @@
+{
+    "positive_prompts": {
+        "default": "your positive prompt here",
+        "anime": "bad anatomy, bad hands, missing fingers, extra digits, fewer digits, cropped, worst quality, low quality",
+        "photo": "illustration, painting, drawing, art, sketch, cartoon, anime, 3d render"
+    },
+    "negative_prompts": {
+        "default": "your negative prompt here",
+        "anime": "bad anatomy, bad hands, missing fingers, extra digits, fewer digits, cropped, worst quality, low quality",
+        "photo": "illustration, painting, drawing, art, sketch, cartoon, anime, 3d render"
+    },
+    "styles": {
+        "cinematic": "cinematic lighting, dramatic lighting, film grain, movie still, depth of field",
+        "anime": "anime style, cel shaded, vibrant colors, clean lines, anime screencap",
+        "photorealistic": "photorealistic, 8k uhd, highly detailed, sharp focus, professional photography",
+        "oil_painting": "oil painting, painterly, brush strokes, canvas texture, classical art",
+        "watercolor": "watercolor painting, soft edges, translucent colors, wet on wet",
+        "concept_art": "concept art, digital painting, artstation, trending on artstation"
+    },
+    "quality": {
+        "masterpiece": "masterpiece, best quality, highly detailed",
+        "hd": "high resolution, 4k, 8k, detailed",
+        "sharp": "sharp focus, intricate details, crisp"
+    },
+    "custom": {
+        "example": "your custom preset here - edit presets.json in your comfyui-nanoruby/nodes folder to add more"
+    }
+}

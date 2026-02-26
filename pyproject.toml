@@ -1,0 +1,24 @@
+[project]
+name = "comfyui-rubytools"
+version = "0.1"
+description = "Personal utility, RP, and tool nodes for ComfyUI by rubyatmidnight"
+authors = [
+    {name = "rubyatmidnight"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.8"
+keywords = ["comfyui", "stable-diffusion", "ai", "nodes", "custom-nodes", "utility"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://feli.fyi"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
