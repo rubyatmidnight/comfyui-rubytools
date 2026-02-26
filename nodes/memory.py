@@ -25,13 +25,13 @@ class SessionMemory:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "memory_key": ("STRING", {"default": "main"}),
+                "memory_key": ("STRING", {"default": "main", "tooltip": "Memory file key name"}),
             },
             "optional": {
-                "session_id": ("STRING", {"default": ""}),  # empty = auto-generate
-                "character_name": ("STRING", {"default": ""}),
-                "content": ("STRING", {"multiline": True, "default": ""}),
-                "mode": (["read", "write", "append"], {"default": "read"}),
+                "session_id": ("STRING", {"default": "", "tooltip": "Session folder name, blank auto-generates"}),  # empty = auto-generate
+                "character_name": ("STRING", {"default": "", "tooltip": "Optional filename prefix"}),
+                "content": ("STRING", {"multiline": True, "default": "", "tooltip": "Text used for write or append"}),
+                "mode": (["read", "write", "append"], {"default": "read", "tooltip": "read gets file text; write replaces; append adds line"}),
             },
         }
 
@@ -85,12 +85,12 @@ class MemoryStore:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "key": ("STRING", {"default": ""}),
+                "key": ("STRING", {"default": "", "tooltip": "Memory key to access"}),
             },
             "optional": {
-                "value": ("STRING", {"multiline": True, "default": ""}),
-                "session_id": ("STRING", {"default": "current"}),
-                "operation": (["get", "set", "append", "delete", "list_keys"], {"default": "get"}),
+                "value": ("STRING", {"multiline": True, "default": "", "tooltip": "Value used for set or append"}),
+                "session_id": ("STRING", {"default": "current", "tooltip": "Session folder storing memory.json"}),
+                "operation": (["get", "set", "append", "delete", "list_keys"], {"default": "get", "tooltip": "get reads; set writes; append adds; delete removes; list_keys returns keys"}),
             },
         }
 
@@ -145,8 +145,8 @@ class MemoryInit:
     def INPUT_TYPES(cls):
         return {
             "optional": {
-                "session_name": ("STRING", {"default": ""}),  # custom name, or auto-generate
-                "create_new": ("BOOLEAN", {"default": False}),  # force new session
+                "session_name": ("STRING", {"default": "", "tooltip": "Custom session name to reuse"}),  # custom name, or auto-generate
+                "create_new": ("BOOLEAN", {"default": False, "tooltip": "Force timestamp session creation"}),  # force new session
             },
         }
 
@@ -177,12 +177,12 @@ class SimpleMemory:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "key": ("STRING", {"default": ""}),
+                "key": ("STRING", {"default": "", "tooltip": "Memory key to access"}),
             },
             "optional": {
-                "value": ("STRING", {"multiline": True, "default": ""}),
-                "namespace": ("STRING", {"default": "default"}),  # organize by workflow/purpose
-                "operation": (["get", "set", "append", "delete", "list_keys", "clear_all"], {"default": "get"}),
+                "value": ("STRING", {"multiline": True, "default": "", "tooltip": "Value used for set or append"}),
+                "namespace": ("STRING", {"default": "default", "tooltip": "Separate store name under output/memory"}),  # organize by workflow/purpose
+                "operation": (["get", "set", "append", "delete", "list_keys", "clear_all"], {"default": "get", "tooltip": "get reads; set writes; append adds; delete removes; list_keys returns keys; clear_all resets store"}),
             },
         }
 
@@ -241,12 +241,12 @@ class SimpleFile:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "filename": ("STRING", {"default": "data.txt"}),
+                "filename": ("STRING", {"default": "data.txt", "tooltip": "File name inside chosen subfolder"}),
             },
             "optional": {
-                "content": ("STRING", {"multiline": True, "default": ""}),
-                "subfolder": ("STRING", {"default": "memory"}),  # subfolder in output/
-                "mode": (["read", "write", "append"], {"default": "read"}),
+                "content": ("STRING", {"multiline": True, "default": "", "tooltip": "Text used for write or append"}),
+                "subfolder": ("STRING", {"default": "memory", "tooltip": "Folder inside output for file storage"}),  # subfolder in output/
+                "mode": (["read", "write", "append"], {"default": "read", "tooltip": "read gets file text; write replaces; append adds line"}),
             },
         }
 

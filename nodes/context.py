@@ -35,19 +35,19 @@ class ContextCard:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "name": ("STRING", {"default": "context"}),
+                "name": ("STRING", {"default": "context", "tooltip": "Context card file name"}),
             },
             "optional": {
-                "environment": ("STRING", {"multiline": True, "default": ""}),
-                "setting": ("STRING", {"multiline": True, "default": ""}),
-                "situation": ("STRING", {"multiline": True, "default": ""}),
-                "combat": ("STRING", {"multiline": True, "default": ""}),
-                "objectives": ("STRING", {"multiline": True, "default": ""}),
-                "threats": ("STRING", {"multiline": True, "default": ""}),
-                "allies": ("STRING", {"multiline": True, "default": ""}),
-                "resources": ("STRING", {"multiline": True, "default": ""}),
-                "notes": ("STRING", {"multiline": True, "default": ""}),
-                "memory_dir": ("STRING", {"default": ""}),
+                "environment": ("STRING", {"multiline": True, "default": "", "tooltip": "Environment details, one per line"}),
+                "setting": ("STRING", {"multiline": True, "default": "", "tooltip": "Setting details, one per line"}),
+                "situation": ("STRING", {"multiline": True, "default": "", "tooltip": "Current situation, one per line"}),
+                "combat": ("STRING", {"multiline": True, "default": "", "tooltip": "Combat state, one per line"}),
+                "objectives": ("STRING", {"multiline": True, "default": "", "tooltip": "Goals, one per line"}),
+                "threats": ("STRING", {"multiline": True, "default": "", "tooltip": "Threats, one per line"}),
+                "allies": ("STRING", {"multiline": True, "default": "", "tooltip": "Allies, one per line"}),
+                "resources": ("STRING", {"multiline": True, "default": "", "tooltip": "Resources, one per line"}),
+                "notes": ("STRING", {"multiline": True, "default": "", "tooltip": "Freeform notes, one per line"}),
+                "memory_dir": ("STRING", {"default": "", "tooltip": "Optional subfolder under contexts"}),
             },
         }
 

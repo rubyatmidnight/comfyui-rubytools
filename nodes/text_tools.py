@@ -90,13 +90,13 @@ class TextLoad:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "filename": ("STRING", {"default": "notes.txt"}),
+                "filename": ("STRING", {"default": "notes.txt", "tooltip": "File name to read"}),
             },
             "optional": {
-                "location": (["input", "output"], {"default": "input"}),
-                "subfolder": ("STRING", {"default": ""}),
-                "missing_ok": ("BOOLEAN", {"default": True}),
-                "encoding": ("STRING", {"default": "utf-8"}),
+                "location": (["input", "output"], {"default": "input", "tooltip": "Base Comfy folder to read from"}),
+                "subfolder": ("STRING", {"default": "", "tooltip": "Optional folder under base location"}),
+                "missing_ok": ("BOOLEAN", {"default": True, "tooltip": "Return empty text when missing"}),
+                "encoding": ("STRING", {"default": "utf-8", "tooltip": "Text encoding for file read"}),
             },
         }
 
@@ -123,15 +123,15 @@ class TextSave:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("STRING", {"multiline": True, "default": ""}),
-                "filename": ("STRING", {"default": "notes.txt"}),
+                "text": ("STRING", {"multiline": True, "default": "", "tooltip": "Text content to save"}),
+                "filename": ("STRING", {"default": "notes.txt", "tooltip": "File name to write"}),
             },
             "optional": {
-                "location": (["input", "output"], {"default": "output"}),
-                "subfolder": ("STRING", {"default": ""}),
-                "append": ("BOOLEAN", {"default": False}),
-                "ensure_newline": ("BOOLEAN", {"default": True}),
-                "encoding": ("STRING", {"default": "utf-8"}),
+                "location": (["input", "output"], {"default": "output", "tooltip": "Base Comfy folder to write to"}),
+                "subfolder": ("STRING", {"default": "", "tooltip": "Optional folder under base location"}),
+                "append": ("BOOLEAN", {"default": False, "tooltip": "Append to file instead of overwrite"}),
+                "ensure_newline": ("BOOLEAN", {"default": True, "tooltip": "Add trailing newline if missing"}),
+                "encoding": ("STRING", {"default": "utf-8", "tooltip": "Text encoding for file write"}),
             },
         }
 
@@ -161,7 +161,7 @@ class TextShow:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("STRING", {"multiline": True, "default": ""}),
+                "text": ("STRING", {"multiline": True, "default": "", "tooltip": "Text to echo to UI"}),
             },
         }
 
@@ -184,16 +184,16 @@ class SequentialImageFromFolder:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "location": (["input", "output"], {"default": "input"}),
-                "subfolder": ("STRING", {"default": ""}),
-                "patterns": ("STRING", {"default": "*.png;*.jpg;*.jpeg;*.webp;*.bmp"}),
+                "location": (["input", "output"], {"default": "input", "tooltip": "Base Comfy folder to scan"}),
+                "subfolder": ("STRING", {"default": "", "tooltip": "Folder to scan inside base"}),
+                "patterns": ("STRING", {"default": "*.png;*.jpg;*.jpeg;*.webp;*.bmp", "tooltip": "Semicolon-separated glob patterns"}),
             },
             "optional": {
-                "start_index": ("INT", {"default": 0, "min": 0, "max": 0xffffffff}),
-                "step": ("INT", {"default": 1, "min": 1, "max": 0xffffffff}),
-                "auto_increment": ("BOOLEAN", {"default": True}),
-                "reset": ("BOOLEAN", {"default": False}),
-                "loop": ("BOOLEAN", {"default": True}),
+                "start_index": ("INT", {"default": 0, "min": 0, "max": 0xffffffff, "tooltip": "Starting file index for sequence"}),
+                "step": ("INT", {"default": 1, "min": 1, "max": 0xffffffff, "tooltip": "Index increment per execution"}),
+                "auto_increment": ("BOOLEAN", {"default": True, "tooltip": "Advance index automatically each run"}),
+                "reset": ("BOOLEAN", {"default": False, "tooltip": "Reset sequence index to start_index"}),
+                "loop": ("BOOLEAN", {"default": True, "tooltip": "Wrap around when index exceeds files"}),
             },
         }
 
@@ -235,23 +235,23 @@ class RegexSwitch:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("STRING", {"multiline": True, "default": ""}),
-                "default_value": ("STRING", {"default": ""}),
+                "text": ("STRING", {"multiline": True, "default": "", "tooltip": "Input text to test against patterns"}),
+                "default_value": ("STRING", {"default": "", "tooltip": "Fallback output when no match"}),
             },
             "optional": {
-                "pattern_1": ("STRING", {"default": ""}),
-                "value_1": ("STRING", {"default": ""}),
-                "pattern_2": ("STRING", {"default": ""}),
-                "value_2": ("STRING", {"default": ""}),
-                "pattern_3": ("STRING", {"default": ""}),
-                "value_3": ("STRING", {"default": ""}),
-                "pattern_4": ("STRING", {"default": ""}),
-                "value_4": ("STRING", {"default": ""}),
-                "pattern_5": ("STRING", {"default": ""}),
-                "value_5": ("STRING", {"default": ""}),
-                "match_mode": (["search", "fullmatch"], {"default": "search"}),
-                "case_insensitive": ("BOOLEAN", {"default": True}),
-                "multiline": ("BOOLEAN", {"default": False}),
+                "pattern_1": ("STRING", {"default": "", "tooltip": "Regex for rule 1"}),
+                "value_1": ("STRING", {"default": "", "tooltip": "Output for rule 1"}),
+                "pattern_2": ("STRING", {"default": "", "tooltip": "Regex for rule 2"}),
+                "value_2": ("STRING", {"default": "", "tooltip": "Output for rule 2"}),
+                "pattern_3": ("STRING", {"default": "", "tooltip": "Regex for rule 3"}),
+                "value_3": ("STRING", {"default": "", "tooltip": "Output for rule 3"}),
+                "pattern_4": ("STRING", {"default": "", "tooltip": "Regex for rule 4"}),
+                "value_4": ("STRING", {"default": "", "tooltip": "Output for rule 4"}),
+                "pattern_5": ("STRING", {"default": "", "tooltip": "Regex for rule 5"}),
+                "value_5": ("STRING", {"default": "", "tooltip": "Output for rule 5"}),
+                "match_mode": (["search", "fullmatch"], {"default": "search", "tooltip": "search finds anywhere; fullmatch requires full string"}),
+                "case_insensitive": ("BOOLEAN", {"default": True, "tooltip": "Ignore case when matching"}),
+                "multiline": ("BOOLEAN", {"default": False, "tooltip": "Enable ^ and $ per line"}),
             },
         }
 
@@ -292,7 +292,7 @@ class ImageHashCache:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "image": ("IMAGE", {"tooltip": "Image tensor to hash"}),
             },
         }
 
@@ -316,16 +316,16 @@ class AutoTagConcat:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "filename": ("STRING", {"default": ""}),
-                "tags": ("STRING", {"default": ""}),
-                "target_filename": ("STRING", {"default": "tags.txt"}),
+                "filename": ("STRING", {"default": "", "tooltip": "Image file name for tag line"}),
+                "tags": ("STRING", {"default": "", "tooltip": "Tag list to wrap in braces"}),
+                "target_filename": ("STRING", {"default": "tags.txt", "tooltip": "Destination text file name"}),
             },
             "optional": {
-                "location": (["input", "output"], {"default": "output"}),
-                "subfolder": ("STRING", {"default": ""}),
-                "append": ("BOOLEAN", {"default": True}),
-                "ensure_newline": ("BOOLEAN", {"default": True}),
-                "encoding": ("STRING", {"default": "utf-8"}),
+                "location": (["input", "output"], {"default": "output", "tooltip": "Base Comfy folder to write to"}),
+                "subfolder": ("STRING", {"default": "", "tooltip": "Optional folder under base location"}),
+                "append": ("BOOLEAN", {"default": True, "tooltip": "Append line instead of overwrite"}),
+                "ensure_newline": ("BOOLEAN", {"default": True, "tooltip": "Add trailing newline if missing"}),
+                "encoding": ("STRING", {"default": "utf-8", "tooltip": "Text encoding for file write"}),
             },
         }
 

@@ -1,15 +1,17 @@
 {
     "positive_prompts": {
-        "default": "your positive prompt here",
-        "anime": "bad anatomy, bad hands, missing fingers, extra digits, fewer digits, cropped, worst quality, low quality",
-        "photo": "illustration, painting, drawing, art, sketch, cartoon, anime, 3d render"
+        "default": "your positive prompt here. you are using the default presets list. update it in comfyui/custom_nodes/comfyui-rubytools/nodes/presets.json",
+        "anime": "illustration, digital art, anime, high quality,",
+        "rubys_avatar": "1girl, solo, long hair, looking at viewer, smile, bangs, blue eyes, simple background, hair ornament, dress, bow, cleavage, bare shoulders, jewelry, upper body, red hair, earrings, detached sleeves, grin, blue bow, oversized bow, princess, magical",
+        "photo": "photorealistic"
     },
     "negative_prompts": {
-        "default": "your negative prompt here",
+        "default": "your negative prompt here. I would suggest not using these defaults. These are not what I use.",
         "anime": "bad anatomy, bad hands, missing fingers, extra digits, fewer digits, cropped, worst quality, low quality",
-        "photo": "illustration, painting, drawing, art, sketch, cartoon, anime, 3d render"
+        "no_digital": "illustration, painting, drawing, art, sketch, cartoon, anime, 3d render"
     },
     "styles": {
+        "default": "you can use the same name under different categories, but there can only be one of each category. Make sure you don't forget commas after lines",
         "cinematic": "cinematic lighting, dramatic lighting, film grain, movie still, depth of field",
         "anime": "anime style, cel shaded, vibrant colors, clean lines, anime screencap",
         "photorealistic": "photorealistic, 8k uhd, highly detailed, sharp focus, professional photography",
@@ -23,6 +25,6 @@
         "sharp": "sharp focus, intricate details, crisp"
     },
     "custom": {
-        "example": "your custom preset here - edit presets.json in your comfyui-nanoruby/nodes folder to add more"
+        "example": "your custom preset here - edit presets.json in your comfyui/custom_nodes/comfyui-rubytools/nodes/presets.json folder to add more"
     }
 }

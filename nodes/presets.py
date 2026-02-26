@@ -52,7 +52,10 @@ class PresetText:
 
         return {
             "required": {
-                "preset": (all_presets, {"default": all_presets[0] if all_presets else ""}),
+                "preset": (all_presets, {
+                    "default": all_presets[0] if all_presets else "",
+                    "tooltip": "Choose category/name from presets.json"
+                }),
             },
         }
 
@@ -88,11 +91,11 @@ class PresetTextMulti:
 
         return {
             "required": {
-                "preset_1": (all_presets, {"default": all_presets[0]}),
-                "preset_2": (all_presets, {"default": all_presets[0]}),
-                "preset_3": (all_presets, {"default": all_presets[0]}),
-                "preset_4": (all_presets, {"default": all_presets[0]}),
-                "separator": ("STRING", {"default": ", "}),
+                "preset_1": (all_presets, {"default": all_presets[0], "tooltip": "First preset to include"}),
+                "preset_2": (all_presets, {"default": all_presets[0], "tooltip": "Second preset to include"}),
+                "preset_3": (all_presets, {"default": all_presets[0], "tooltip": "Third preset to include"}),
+                "preset_4": (all_presets, {"default": all_presets[0], "tooltip": "Fourth preset to include"}),
+                "separator": ("STRING", {"default": ", ", "tooltip": "Text inserted between selected presets"}),
             },
         }
 

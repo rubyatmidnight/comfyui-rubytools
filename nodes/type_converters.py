@@ -16,11 +16,16 @@ class IntToString:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("INT", {"default": 0, "min": -0xffffffffffffffff, "max": 0xffffffffffffffff}),
+                "value": ("INT", {
+                    "default": 0,
+                    "min": -0xffffffffffffffff,
+                    "max": 0xffffffffffffffff,
+                    "tooltip": "Integer to convert to text"
+                }),
             },
             "optional": {
-                "prefix": ("STRING", {"default": ""}),
-                "suffix": ("STRING", {"default": ""}),
+                "prefix": ("STRING", {"default": "", "tooltip": "Text added before number"}),
+                "suffix": ("STRING", {"default": "", "tooltip": "Text added after number"}),
             }
         }
 
@@ -40,12 +45,18 @@ class FloatToString:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("FLOAT", {"default": 0.0, "min": -1e10, "max": 1e10, "step": 0.001}),
+                "value": ("FLOAT", {
+                    "default": 0.0,
+                    "min": -1e10,
+                    "max": 1e10,
+                    "step": 0.001,
+                    "tooltip": "Float to convert to text"
+                }),
             },
             "optional": {
-                "decimal_places": ("INT", {"default": 2, "min": 0, "max": 10}),
-                "prefix": ("STRING", {"default": ""}),
-                "suffix": ("STRING", {"default": ""}),
+                "decimal_places": ("INT", {"default": 2, "min": 0, "max": 10, "tooltip": "Digits after decimal point"}),
+                "prefix": ("STRING", {"default": "", "tooltip": "Text added before number"}),
+                "suffix": ("STRING", {"default": "", "tooltip": "Text added after number"}),
             }
         }
 
@@ -67,10 +78,10 @@ class StringConcat3:
         return {
             "required": {},
             "optional": {
-                "string_1": ("STRING", {"default": ""}),
-                "string_2": ("STRING", {"default": ""}),
-                "string_3": ("STRING", {"default": ""}),
-                "separator": ("STRING", {"default": ""}),
+                "string_1": ("STRING", {"default": "", "tooltip": "First string segment"}),
+                "string_2": ("STRING", {"default": "", "tooltip": "Second string segment"}),
+                "string_3": ("STRING", {"default": "", "tooltip": "Third string segment"}),
+                "separator": ("STRING", {"default": "", "tooltip": "Inserted between non-empty parts"}),
             }
         }
 
@@ -92,11 +103,11 @@ class StringConcat4:
         return {
             "required": {},
             "optional": {
-                "string_1": ("STRING", {"default": ""}),
-                "string_2": ("STRING", {"default": ""}),
-                "string_3": ("STRING", {"default": ""}),
-                "string_4": ("STRING", {"default": ""}),
-                "separator": ("STRING", {"default": ""}),
+                "string_1": ("STRING", {"default": "", "tooltip": "First string segment"}),
+                "string_2": ("STRING", {"default": "", "tooltip": "Second string segment"}),
+                "string_3": ("STRING", {"default": "", "tooltip": "Third string segment"}),
+                "string_4": ("STRING", {"default": "", "tooltip": "Fourth string segment"}),
+                "separator": ("STRING", {"default": "", "tooltip": "Inserted between non-empty parts"}),
             }
         }
 
@@ -118,13 +129,13 @@ class StringConcat6:
         return {
             "required": {},
             "optional": {
-                "string_1": ("STRING", {"default": ""}),
-                "string_2": ("STRING", {"default": ""}),
-                "string_3": ("STRING", {"default": ""}),
-                "string_4": ("STRING", {"default": ""}),
-                "string_5": ("STRING", {"default": ""}),
-                "string_6": ("STRING", {"default": ""}),
-                "separator": ("STRING", {"default": ""}),
+                "string_1": ("STRING", {"default": "", "tooltip": "First string segment"}),
+                "string_2": ("STRING", {"default": "", "tooltip": "Second string segment"}),
+                "string_3": ("STRING", {"default": "", "tooltip": "Third string segment"}),
+                "string_4": ("STRING", {"default": "", "tooltip": "Fourth string segment"}),
+                "string_5": ("STRING", {"default": "", "tooltip": "Fifth string segment"}),
+                "string_6": ("STRING", {"default": "", "tooltip": "Sixth string segment"}),
+                "separator": ("STRING", {"default": "", "tooltip": "Inserted between non-empty parts"}),
             }
         }
 
@@ -147,12 +158,12 @@ class MixedConcat4:
         return {
             "required": {},
             "optional": {
-                "value_1": ("STRING,INT,FLOAT", {"default": ""}),
-                "value_2": ("STRING,INT,FLOAT", {"default": ""}),
-                "value_3": ("STRING,INT,FLOAT", {"default": ""}),
-                "value_4": ("STRING,INT,FLOAT", {"default": ""}),
-                "separator": ("STRING", {"default": ""}),
-                "float_decimals": ("INT", {"default": 2, "min": 0, "max": 10}),
+                "value_1": ("STRING,INT,FLOAT", {"default": "", "tooltip": "First value to concatenate"}),
+                "value_2": ("STRING,INT,FLOAT", {"default": "", "tooltip": "Second value to concatenate"}),
+                "value_3": ("STRING,INT,FLOAT", {"default": "", "tooltip": "Third value to concatenate"}),
+                "value_4": ("STRING,INT,FLOAT", {"default": "", "tooltip": "Fourth value to concatenate"}),
+                "separator": ("STRING", {"default": "", "tooltip": "Inserted between non-empty parts"}),
+                "float_decimals": ("INT", {"default": 2, "min": 0, "max": 10, "tooltip": "Decimal places for float values"}),
             }
         }
 
@@ -189,12 +200,12 @@ class IterateFloat:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "min_value": ("FLOAT", {"default": 0.0, "min": -1e10, "max": 1e10, "step": 0.01}),
-                "max_value": ("FLOAT", {"default": 1.0, "min": -1e10, "max": 1e10, "step": 0.01}),
+                "min_value": ("FLOAT", {"default": 0.0, "min": -1e10, "max": 1e10, "step": 0.01, "tooltip": "Start of float range"}),
+                "max_value": ("FLOAT", {"default": 1.0, "min": -1e10, "max": 1e10, "step": 0.01, "tooltip": "End of float range"}),
                 "steps": ("INT", {"default": 10, "min": 1, "max": 1000,
                     "tooltip": "Number of steps from min to max"}),
-                "auto_increment": ("BOOLEAN", {"default": True}),
-                "reset": ("BOOLEAN", {"default": False}),
+                "auto_increment": ("BOOLEAN", {"default": True, "tooltip": "Advance iteration automatically each run"}),
+                "reset": ("BOOLEAN", {"default": False, "tooltip": "Reset internal counter to zero"}),
             },
             "optional": {
                 "iteration": ("INT", {"default": 0, "min": 0, "max": 0xffffffff,
@@ -247,12 +258,12 @@ class IterateInt:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "min_value": ("INT", {"default": 0, "min": -0xffffffff, "max": 0xffffffff}),
-                "max_value": ("INT", {"default": 10, "min": -0xffffffff, "max": 0xffffffff}),
+                "min_value": ("INT", {"default": 0, "min": -0xffffffff, "max": 0xffffffff, "tooltip": "Start of integer range"}),
+                "max_value": ("INT", {"default": 10, "min": -0xffffffff, "max": 0xffffffff, "tooltip": "End of integer range"}),
                 "step_size": ("INT", {"default": 1, "min": 1, "max": 1000,
                     "tooltip": "Increment per iteration"}),
-                "auto_increment": ("BOOLEAN", {"default": True}),
-                "reset": ("BOOLEAN", {"default": False}),
+                "auto_increment": ("BOOLEAN", {"default": True, "tooltip": "Advance iteration automatically each run"}),
+                "reset": ("BOOLEAN", {"default": False, "tooltip": "Reset internal counter to zero"}),
             },
             "optional": {
                 "iteration": ("INT", {"default": 0, "min": 0, "max": 0xffffffff,
@@ -301,13 +312,13 @@ class ExtractJSONFields:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "json_input": ("JSON",),
+                "json_input": ("JSON", {"tooltip": "JSON object or JSON string input"}),
             },
             "optional": {
-                "model_key": ("STRING", {"default": "model"}),
-                "content_key": ("STRING", {"default": "choices.0.message.content"}),
-                "include_tokens": ("BOOLEAN", {"default": False}),
-                "tokens_key": ("STRING", {"default": "usage.total_tokens"}),
+                "model_key": ("STRING", {"default": "model", "tooltip": "Dot-path to model field"}),
+                "content_key": ("STRING", {"default": "choices.0.message.content", "tooltip": "Dot-path to response text"}),
+                "include_tokens": ("BOOLEAN", {"default": False, "tooltip": "Also extract token usage"}),
+                "tokens_key": ("STRING", {"default": "usage.total_tokens", "tooltip": "Dot-path to token count"}),
             }
         }
 
@@ -374,13 +385,13 @@ class FormatJSONForFile:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "model": ("STRING",),
-                "content": ("STRING",),
+                "model": ("STRING", {"tooltip": "Model name to include in output"}),
+                "content": ("STRING", {"tooltip": "Response text to include"}),
             },
             "optional": {
-                "tokens": ("INT", {"default": 0}),
-                "separator": ("STRING", {"default": "---"}),
-                "include_tokens": ("BOOLEAN", {"default": False}),
+                "tokens": ("INT", {"default": 0, "tooltip": "Token count for this response"}),
+                "separator": ("STRING", {"default": "---", "tooltip": "Section divider text"}),
+                "include_tokens": ("BOOLEAN", {"default": False, "tooltip": "Include token line in output"}),
             }
         }
 
@@ -397,10 +408,10 @@ class StringToInt:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("STRING", {"default": ""}),
+                "value": ("STRING", {"default": "", "tooltip": "String to parse as integer"}),
             },
             "optional": {
-                "default": ("INT", {"default": 0}),
+                "default": ("INT", {"default": 0, "tooltip": "Fallback if parsing fails"}),
             }
         }
 
@@ -423,10 +434,10 @@ class StringToFloat:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("STRING", {"default": ""}),
+                "value": ("STRING", {"default": "", "tooltip": "String to parse as float"}),
             },
             "optional": {
-                "default": ("FLOAT", {"default": 0.0}),
+                "default": ("FLOAT", {"default": 0.0, "tooltip": "Fallback if parsing fails"}),
             }
         }
 
@@ -449,11 +460,11 @@ class BoolToString:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("BOOLEAN", {"default": False}),
+                "value": ("BOOLEAN", {"default": False, "tooltip": "Boolean input value"}),
             },
             "optional": {
-                "true_text": ("STRING", {"default": "true"}),
-                "false_text": ("STRING", {"default": "false"}),
+                "true_text": ("STRING", {"default": "true", "tooltip": "Output text when value is true"}),
+                "false_text": ("STRING", {"default": "false", "tooltip": "Output text when value is false"}),
             }
         }
 
@@ -481,13 +492,16 @@ class StringListPicker:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "lines_text": ("STRING", {"multiline": True, "default": ""}),
-                "mode": (["random_secure", "shuffle_no_repeat", "round_robin", "even_index", "odd_index", "first", "last"], {"default": "shuffle_no_repeat"}),
+                "lines_text": ("STRING", {"multiline": True, "default": "", "tooltip": "One candidate value per line"}),
+                "mode": (["random_secure", "shuffle_no_repeat", "round_robin", "even_index", "odd_index", "first", "last"], {
+                    "default": "shuffle_no_repeat",
+                    "tooltip": "random_secure: CSPRNG pick each run (Python secrets); shuffle_no_repeat: shuffled cycle without repeats; round_robin: deterministic order; even_index/odd_index: random pick from matching parity; first/last: fixed pick"
+                }),
             },
             "optional": {
-                "slot": ("STRING", {"default": ""}),
-                "reset": ("BOOLEAN", {"default": False}),
-                "strip_empty": ("BOOLEAN", {"default": True}),
+                "slot": ("STRING", {"default": "", "tooltip": "State key to share rotation across nodes"}),
+                "reset": ("BOOLEAN", {"default": False, "tooltip": "Reset slot counter and shuffle state"}),
+                "strip_empty": ("BOOLEAN", {"default": True, "tooltip": "Trim lines and drop blank entries"}),
             }
         }
 
@@ -580,7 +594,7 @@ class HexToInt:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "hex_string": ("STRING", {"default": ""}),
+                "hex_string": ("STRING", {"default": "", "tooltip": "Hex string like ff or 0xff"}),
             },
         }
 
@@ -602,11 +616,16 @@ class IntToHex:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("INT", {"default": 0, "min": -0xffffffffffffffff, "max": 0xffffffffffffffff}),
+                "value": ("INT", {
+                    "default": 0,
+                    "min": -0xffffffffffffffff,
+                    "max": 0xffffffffffffffff,
+                    "tooltip": "Integer to convert to hex"
+                }),
             },
             "optional": {
-                "uppercase": ("BOOLEAN", {"default": False}),
-                "prefix_0x": ("BOOLEAN", {"default": False}),
+                "uppercase": ("BOOLEAN", {"default": False, "tooltip": "Use uppercase hex letters"}),
+                "prefix_0x": ("BOOLEAN", {"default": False, "tooltip": "Prefix output with 0x"}),
             },
         }
 
@@ -629,9 +648,9 @@ class BypassSwitch:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "bypass": ("BOOLEAN", {"default": False}),
-                "bypass_value": ("*",),
-                "active_value": ("*",),
+                "bypass": ("BOOLEAN", {"default": False, "tooltip": "True routes bypass_value to output"}),
+                "bypass_value": ("*", {"tooltip": "Value returned when bypass is true"}),
+                "active_value": ("*", {"tooltip": "Value returned when bypass is false"}),
             }
         }
 

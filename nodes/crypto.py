@@ -13,11 +13,11 @@ class SHA256Hash:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("STRING", {"multiline": True, "default": ""}),
+                "text": ("STRING", {"multiline": True, "default": "", "tooltip": "Input text to hash"}),
             },
             "optional": {
-                "encoding": ("STRING", {"default": "utf-8"}),
-                "uppercase": ("BOOLEAN", {"default": False}),
+                "encoding": ("STRING", {"default": "utf-8", "tooltip": "Text encoding before hashing"}),
+                "uppercase": ("BOOLEAN", {"default": False, "tooltip": "Uppercase hexadecimal output"}),
             },
         }
 
@@ -43,13 +43,13 @@ class HMACSign:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "message": ("STRING", {"multiline": True, "default": ""}),
-                "key": ("STRING", {"default": ""}),
+                "message": ("STRING", {"multiline": True, "default": "", "tooltip": "Message text to sign"}),
+                "key": ("STRING", {"default": "", "tooltip": "Secret key for HMAC"}),
             },
             "optional": {
-                "algorithm": (["sha256", "sha512", "sha1", "md5"], {"default": "sha256"}),
-                "encoding": ("STRING", {"default": "utf-8"}),
-                "uppercase": ("BOOLEAN", {"default": False}),
+                "algorithm": (["sha256", "sha512", "sha1", "md5"], {"default": "sha256", "tooltip": "Digest algorithm used by HMAC"}),
+                "encoding": ("STRING", {"default": "utf-8", "tooltip": "Text encoding for key and message"}),
+                "uppercase": ("BOOLEAN", {"default": False, "tooltip": "Uppercase hexadecimal output"}),
             },
         }
 
