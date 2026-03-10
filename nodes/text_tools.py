@@ -4,6 +4,10 @@ Simple text and file utility nodes.
 from pathlib import Path
 import hashlib
 import re
+import json
+import os
+import tempfile
+from xml.etree import ElementTree as ET
 
 try:
     import folder_paths as comfy_paths
@@ -81,6 +85,129 @@ def _hash_image(image):
     else:
         data = image
     return hashlib.sha256(data.tobytes()).hexdigest()
+
+
+def _to_text(value):
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="ignore")
+    return str(value)
+
+
+def _safe_xml_tag(key):
+    cleaned = re.sub(r"[^A-Za-z0-9_]", "_", key or "")
+    cleaned = cleaned.strip("_")
+    if not cleaned:
+        cleaned = "tag_data"
+    if cleaned[0].isdigit():
+        cleaned = f"_{cleaned}"
+    return cleaned
+
+
+def _merge_xmp_metadata(existing_xmp, metadata_key, metadata_value):
+    xmp_ns = "adobe:ns:meta/"
+    rdf_ns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    ruby_ns = "urn:comfyui:rubytools"
+    ET.register_namespace("x", xmp_ns)
+    ET.register_namespace("rdf", rdf_ns)
+    ET.register_namespace("rubytools", ruby_ns)
+    root = None
+    source = _to_text(existing_xmp).strip()
+    if source:
+        source = re.sub(r"<\?xpacket[^>]*\?>", "", source).strip()
+        try:
+            root = ET.fromstring(source)
+        except Exception:
+            root = None
+    if root is None:
+        root = ET.Element(f"{{{xmp_ns}}}xmpmeta")
+    if root.tag == f"{{{rdf_ns}}}RDF":
+        rdf_node = root
+    else:
+        rdf_node = root.find(f"{{{rdf_ns}}}RDF")
+        if rdf_node is None:
+            rdf_node = ET.SubElement(root, f"{{{rdf_ns}}}RDF")
+    desc_node = rdf_node.find(f"{{{rdf_ns}}}Description")
+    if desc_node is None:
+        desc_node = ET.SubElement(rdf_node, f"{{{rdf_ns}}}Description")
+    xml_key = _safe_xml_tag(metadata_key)
+    item_tag = f"{{{ruby_ns}}}{xml_key}"
+    item_node = desc_node.find(item_tag)
+    if item_node is None:
+        item_node = ET.SubElement(desc_node, item_tag)
+    item_node.text = metadata_value
+    item_node.set(f"{{{ruby_ns}}}source_key", metadata_key)
+    return ET.tostring(root, encoding="utf-8", xml_declaration=False)
+
+
+def _parse_user_comment(raw_value):
+    text = raw_value
+    if isinstance(raw_value, bytes):
+        prefixes = (b"ASCII\x00\x00\x00", b"UNICODE\x00", b"JIS\x00\x00\x00\x00\x00")
+        for prefix in prefixes:
+            if raw_value.startswith(prefix):
+                text = raw_value[len(prefix):]
+                break
+    text = _to_text(text).strip()
+    if not text:
+        return {}
+    try:
+        payload = json.loads(text)
+    except Exception:
+        return {"_legacy_user_comment": text}
+    if isinstance(payload, dict):
+        return payload
+    return {"_legacy_user_comment": text}
+
+
+def _build_png_save_kwargs(image, metadata_key, metadata_value):
+    from PIL import PngImagePlugin
+    pnginfo = PngImagePlugin.PngInfo()
+    for key, value in image.info.items():
+        if key in {"icc_profile", "dpi", "gamma", "transparency", "aspect"}:
+            continue
+        if isinstance(value, bytes):
+            try:
+                value = value.decode("utf-8")
+            except Exception:
+                continue
+        if isinstance(value, str):
+            pnginfo.add_text(key, value)
+    pnginfo.add_text(metadata_key, metadata_value)
+    save_kwargs = {"pnginfo": pnginfo}
+    for keep_key in ("icc_profile", "dpi", "gamma", "transparency"):
+        if keep_key in image.info:
+            save_kwargs[keep_key] = image.info[keep_key]
+    return save_kwargs
+
+
+def _build_jpeg_save_kwargs(image, metadata_key, metadata_value, jpeg_quality):
+    exif_data = image.getexif()
+    user_comment = _parse_user_comment(exif_data.get(0x9286))
+    user_comment[metadata_key] = metadata_value
+    exif_data[0x9286] = json.dumps(user_comment, ensure_ascii=False)
+    save_kwargs = {
+        "quality": jpeg_quality,
+        "exif": exif_data.tobytes(),
+        "xmp": _merge_xmp_metadata(image.info.get("xmp"), metadata_key, metadata_value),
+    }
+    for keep_key in ("icc_profile", "comment", "dpi", "subsampling", "qtables", "optimize"):
+        if keep_key in image.info:
+            save_kwargs[keep_key] = image.info[keep_key]
+    return save_kwargs
+
+
+def _save_image_atomic(image, destination, format_name, save_kwargs):
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=destination.suffix, dir=destination.parent) as tmp_handle:
+        tmp_name = tmp_handle.name
+    try:
+        image.save(tmp_name, format=format_name, **save_kwargs)
+        os.replace(tmp_name, destination)
+    finally:
+        if os.path.exists(tmp_name):
+            os.remove(tmp_name)
 
 
 class TextLoad:
@@ -348,6 +475,78 @@ class AutoTagConcat:
         return (line, str(file_path))
 
 
+class EmbedImageTagsAndIndex:
+    """Embed image tags and append index."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image_path": ("STRING", {"default": "", "tooltip": "Absolute or relative path of image to update"}),
+                "tags": ("STRING", {"default": "", "tooltip": "Tags to embed and index"}),
+                "metadata_key": ("STRING", {"default": "ruby.tags", "tooltip": "Custom metadata key name"}),
+                "index_filename": ("STRING", {"default": "master_tags.txt", "tooltip": "Text index file to append"}),
+            },
+            "optional": {
+                "overwrite_image": ("BOOLEAN", {"default": True, "tooltip": "Write metadata back to source file"}),
+                "output_location": (["input", "output"], {"default": "output", "tooltip": "Base folder when overwrite is false"}),
+                "output_subfolder": ("STRING", {"default": "", "tooltip": "Folder under output location"}),
+                "output_filename": ("STRING", {"default": "", "tooltip": "Optional destination image name"}),
+                "index_location": (["input", "output"], {"default": "output", "tooltip": "Base folder for index file"}),
+                "index_subfolder": ("STRING", {"default": "", "tooltip": "Folder under index location"}),
+                "append_index": ("BOOLEAN", {"default": True, "tooltip": "Append line instead of overwrite"}),
+                "ensure_newline": ("BOOLEAN", {"default": True, "tooltip": "Add trailing newline to index line"}),
+                "encoding": ("STRING", {"default": "utf-8", "tooltip": "Text encoding for index file"}),
+                "separator": ("STRING", {"default": "\t", "tooltip": "Delimiter between filename and tags"}),
+                "jpeg_quality": ("INT", {"default": 95, "min": 1, "max": 100, "tooltip": "JPEG quality when rewriting jpg/jpeg"}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "BOOLEAN")
+    RETURN_NAMES = ("saved_image_path", "index_path", "index_line", "embedded")
+    FUNCTION = "embed"
+    CATEGORY = "Ruby's Nodes/IO"
+
+    def embed(self, image_path, tags, metadata_key, index_filename, overwrite_image=True,
+              output_location="output", output_subfolder="", output_filename="",
+              index_location="output", index_subfolder="", append_index=True,
+              ensure_newline=True, encoding="utf-8", separator="\t", jpeg_quality=95):
+        from PIL import Image
+        src_path = Path(image_path).expanduser()
+        if not src_path.is_absolute():
+            src_path = Path.cwd() / src_path
+        src_path = src_path.resolve()
+        if not src_path.exists():
+            raise FileNotFoundError(f"Missing image: {src_path}")
+        if overwrite_image:
+            dst_path = src_path
+        else:
+            base_dir = _get_base_dir(output_location)
+            dest_name = output_filename or src_path.name
+            dst_path = _safe_join(base_dir, output_subfolder, dest_name)
+        suffix = src_path.suffix.lower()
+        if suffix not in {".png", ".jpg", ".jpeg"}:
+            raise ValueError("Only PNG/JPG/JPEG are supported.")
+        with Image.open(src_path) as image:
+            if suffix == ".png":
+                save_kwargs = _build_png_save_kwargs(image, metadata_key, tags)
+                _save_image_atomic(image, dst_path, "PNG", save_kwargs)
+            else:
+                work_image = image if image.mode in {"RGB", "L"} else image.convert("RGB")
+                save_kwargs = _build_jpeg_save_kwargs(work_image, metadata_key, tags, jpeg_quality)
+                _save_image_atomic(work_image, dst_path, "JPEG", save_kwargs)
+        index_base = _get_base_dir(index_location)
+        index_path = _safe_join(index_base, index_subfolder, index_filename)
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        index_line = f"{dst_path.name}{separator}{tags}"
+        if ensure_newline and not index_line.endswith("\n"):
+            index_line += "\n"
+        mode = "a" if append_index else "w"
+        with open(index_path, mode, encoding=encoding) as handle:
+            handle.write(index_line)
+        return (str(dst_path), str(index_path), index_line, True)
+
+
 NODE_CLASS_MAPPINGS = {
     "RubyTextLoad": TextLoad,
     "RubyTextSave": TextSave,
@@ -356,6 +555,7 @@ NODE_CLASS_MAPPINGS = {
     "RubyRegexSwitch": RegexSwitch,
     "RubyImageHashCache": ImageHashCache,
     "RubyAutoTagConcat": AutoTagConcat,
+    "RubyEmbedImageTagsAndIndex": EmbedImageTagsAndIndex,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -366,4 +566,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RubyRegexSwitch": "Regex Switch",
     "RubyImageHashCache": "Image Hash Cache",
     "RubyAutoTagConcat": "Auto Tag Concat",
+    "RubyEmbedImageTagsAndIndex": "Embed Image Tags + Index",
 }

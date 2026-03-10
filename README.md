@@ -19,6 +19,9 @@ If you want the nanoruby (NanoGPT nodes) then you can find them in their own rep
 - Auto Tag Formatting  
   Format tag index text entries for workflows like Hydrus.
 
+- Embed Image Tags + Index  
+  Embed tags into PNG/JPG metadata and append a filename+tags line to a master text index.
+
 - Filename Save Aide  
   Create a consistent date-based nested folder structure.
 
@@ -120,6 +123,8 @@ Options:
 - `Sequential Image From Folder`: lists files by pattern and returns one image per run.
 - `Sequential Image From Folder`: `auto_increment` advances index, `reset` returns to `start_index`, `loop` wraps on overflow.
 - `Auto Tag Concat`: writes lines in `[filename={tags}]` format for tag indexing.
+- `Embed Image Tags + Index`: writes tags under a custom key (`metadata_key`) while preserving existing metadata where possible.
+- `Embed Image Tags + Index`: supports `.png`, `.jpg`, `.jpeg`; appends `filename<TAB>tags` to your selected index file.
 
 ### Crypto / Hash Utility Notes
 
