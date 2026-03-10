@@ -123,8 +123,8 @@ Options:
 - `Sequential Image From Folder`: lists files by pattern and returns one image per run.
 - `Sequential Image From Folder`: `auto_increment` advances index, `reset` returns to `start_index`, `loop` wraps on overflow.
 - `Auto Tag Concat`: writes lines in `[filename={tags}]` format for tag indexing.
-- `Embed Image Tags + Index`: writes tags under a custom key (`metadata_key`) while preserving existing metadata where possible.
-- `Embed Image Tags + Index`: supports `.png`, `.jpg`, `.jpeg`; appends `filename<TAB>tags` to your selected index file.
+- `Embed Image Tags + Index`: minimal inputs (`image`, `image_path`, `tags`, `metadata_key`, `index_filepath`).
+- `Embed Image Tags + Index`: supports `.png`, `.jpg`, `.jpeg`; appends `filename<TAB>tags` into `output/<index_filepath>`.
 
 ### Crypto / Hash Utility Notes
 
