@@ -40,6 +40,12 @@ If you want the nanoruby (NanoGPT nodes) then you can find them in their own rep
 - Sequential Image Load From Folder (no batching)  
   Load one image per run and increment an index.
 
+- GPT Token Count  
+  Count prompt tokens in OpenAI-style token space.
+
+- CLIP Chunk Estimate  
+  Estimate CLIP prompt token chunks and capacity.
+
 ### String/Json Utilities:
 - Integer to String: `1 -> "1"`
 - Float to String: `0.5 -> "0.5"`
@@ -107,6 +113,35 @@ Options:
 - `reset`: clears that slot's counter and shuffle state.
 - `strip_empty`: trims lines and removes blanks before picking.
 
+### GPT Token Count
+
+Counts text in OpenAI-style token space.
+
+- Uses `tiktoken` when installed.
+- Falls back to local estimate if `tiktoken` is unavailable.
+- Accepts either model names (for example `gpt-4o-mini`) or encoding names (for example `o200k_base`, `cl100k_base`).
+
+Options:
+- `model_or_encoding`: tokenizer source used for counting.
+- `context_window`: used to compute `%` usage and over-limit flag.
+
+Returns:
+- `tokens`, `context_window`, `percent_used`, `over_limit`, `method`.
+
+### CLIP Chunk Estimate
+
+Estimates CLIP prompt chunk usage for Comfy-style prompt chunking.
+
+- Uses a local heuristic estimator.
+- Default payload size is `75` tokens per chunk.
+- Useful for translated prompts or long weighted prompt strings.
+
+Options:
+- `payload_tokens_per_chunk`: payload capacity per chunk.
+
+Returns:
+- `estimated_tokens`, `chunks`, `tokens_with_special`, `total_payload_capacity`, `fits_single_chunk`, `method`.
+
 ### String / JSON Utility Notes
 
 - `String Concatenate (3/4/6)`: joins non-empty inputs with `separator`.
@@ -115,6 +150,13 @@ Options:
 - `Extract JSON Field`: supports dot-path lookup (for example `choices.0.message.content`).
 - `Format JSON Utility`: creates a readable block for logs/files, optional token line.
 - `Bypass Switch`: routes `bypass_value` when `bypass=true`, otherwise `active_value`.
+
+### Token Utility Notes
+
+- `GPT Token Count`: OpenAI-style tokenizer count with `% context used` and limit check.
+- `GPT Token Count`: accepts model or encoding input (`gpt-4o-mini`, `cl100k_base`, `o200k_base`, etc).
+- `CLIP Chunk Estimate`: estimates token load and chunk count for CLIP prompt windows.
+- `CLIP Chunk Estimate`: reports chunk payload capacity and single-chunk fit.
 
 ### File / IO Utility Notes
 
