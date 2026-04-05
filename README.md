@@ -46,6 +46,9 @@ If you want the nanoruby (NanoGPT nodes) then you can find them in their own rep
 - CLIP Chunk Estimate  
   Estimate CLIP prompt token chunks and capacity.
 
+- Math Expression  
+  Evaluate safe custom math expressions with named inputs.
+
 ### String/Json Utilities:
 - Integer to String: `1 -> "1"`
 - Float to String: `0.5 -> "0.5"`
@@ -128,6 +131,25 @@ Options:
 Returns:
 - `tokens`, `context_window`, `percent_used`, `over_limit`, `method`.
 
+### Math Expression
+
+Evaluates a safe math expression without using raw `eval`.
+
+- Uses named inputs `a` through `f`.
+- Supports operators like `+`, `-`, `*`, `/`, `//`, `%`, `**`, and parentheses.
+- Supports comparisons like `>`, `<`, `>=`, `<=`, `==`, `!=`.
+- Includes constants `pi`, `math_e`, `tau`.
+- Includes helpers like `abs`, `min`, `max`, `round`, `floor`, `ceil`, `sqrt`, `log`, `sin`, `cos`, `tan`, `clamp`, `lerp`, `invlerp`, `remap`, `wrap`, `pingpong`, and `ifelse`.
+- Includes random helpers `rand()` / `rand(min, max)` and `randint(min, max)`.
+- Also supports inline conditional expressions like `a if b > 0 else c`.
+
+Options:
+- `expression`: formula text using `a`-`f`.
+- `a`-`f`: numeric input values for the expression.
+
+Returns:
+- `value`, `int_value`, `text`, `ok`.
+
 ### CLIP Chunk Estimate
 
 Estimates CLIP prompt chunk usage for Comfy-style prompt chunking.
@@ -157,6 +179,13 @@ Returns:
 - `GPT Token Count`: accepts model or encoding input (`gpt-4o-mini`, `cl100k_base`, `o200k_base`, etc).
 - `CLIP Chunk Estimate`: estimates token load and chunk count for CLIP prompt windows.
 - `CLIP Chunk Estimate`: reports chunk payload capacity and single-chunk fit.
+
+### Math Utility Notes
+
+- `Math Expression`: safe formula evaluator for small workflow calculations.
+- `Math Expression`: returns float, int, string, and success flag outputs.
+- `Math Expression`: uses fixed named inputs instead of exposing arbitrary code execution.
+- `Math Expression`: recalculates on each run when the expression uses `rand()` or `randint()`.
 
 ### File / IO Utility Notes
 
