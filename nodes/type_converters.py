@@ -641,6 +641,83 @@ class IntToHex:
         return (hex_out,)
 
 
+class StringToBool:
+    """Convert a string to a boolean. Accepts '1'/'0', 'true'/'false', 'yes'/'no', 'on'/'off'."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "value": ("STRING", {"default": "", "tooltip": "String to parse as boolean"}),
+            },
+            "optional": {
+                "default": ("BOOLEAN", {"default": False, "tooltip": "Fallback if string is unrecognized"}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("bool",)
+    FUNCTION = "convert"
+    CATEGORY = "Utility/Convert"
+
+    def convert(self, value, default=False):
+        v = value.strip().lower()
+        if v in ("1", "true", "yes", "on"):
+            return (True,)
+        if v in ("0", "false", "no", "off"):
+            return (False,)
+        return (default,)
+
+
+class IntToBool:
+    """Convert an integer to a boolean."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "value": ("INT", {
+                    "default": 0,
+                    "min": -0xffffffffffffffff,
+                    "max": 0xffffffffffffffff,
+                    "tooltip": "Integer to convert (0 = false, any other = true)"
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("bool",)
+    FUNCTION = "convert"
+    CATEGORY = "Utility/Convert"
+
+    def convert(self, value):
+        return (bool(value),)
+
+
+class BoolToInt:
+    """Convert a boolean to an integer."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "value": ("BOOLEAN", {"default": False, "tooltip": "Boolean to convert"}),
+            },
+            "optional": {
+                "true_value": ("INT", {"default": 1, "tooltip": "Output when true"}),
+                "false_value": ("INT", {"default": 0, "tooltip": "Output when false"}),
+            }
+        }
+
+    RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("int",)
+    FUNCTION = "convert"
+    CATEGORY = "Utility/Convert"
+
+    def convert(self, value, true_value=1, false_value=0):
+        return (true_value if value else false_value,)
+
+
 class BypassSwitch:
     """Route bypass or active value."""
 
@@ -685,6 +762,9 @@ NODE_CLASS_MAPPINGS = {
     "RubyStringListPicker": StringListPicker,
     "RubyHexToInt": HexToInt,
     "RubyIntToHex": IntToHex,
+    "RubyStringToBool": StringToBool,
+    "RubyIntToBool": IntToBool,
+    "RubyBoolToInt": BoolToInt,
     "RubyBypassSwitch": BypassSwitch,
 }
 
@@ -705,5 +785,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RubyStringListPicker": "Random String From List",
     "RubyHexToInt": "Hex to Integer",
     "RubyIntToHex": "Integer to Hex",
+    "RubyStringToBool": "String to Boolean",
+    "RubyIntToBool": "Integer to Boolean",
+    "RubyBoolToInt": "Boolean to Integer",
     "RubyBypassSwitch": "Bypass Switch",
 }
