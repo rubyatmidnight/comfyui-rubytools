@@ -247,10 +247,44 @@ class MathExpression:
             return (0.0, 0, f"Error: {exc}", False)
 
 
+class RandomRoll:
+    """Roll a random float and compare against a threshold. Returns 1 if roll >= threshold, else 0."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "threshold": ("FLOAT", {
+                    "default": 0.9,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "step": 0.01,
+                    "tooltip": "Roll must be >= this value to succeed (0.9 = 10% chance)"
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("INT", "BOOLEAN", "FLOAT")
+    RETURN_NAMES = ("result", "success", "roll")
+    FUNCTION = "roll"
+    CATEGORY = "Ruby's Nodes/Utility"
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("nan")
+
+    def roll(self, threshold):
+        r = random.random()
+        success = r >= threshold
+        return (1 if success else 0, success, r)
+
+
 NODE_CLASS_MAPPINGS = {
     "RubyMathExpression": MathExpression,
+    "RubyRandomRoll": RandomRoll,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "RubyMathExpression": "Math Expression",
+    "RubyRandomRoll": "Random Roll",
 }
