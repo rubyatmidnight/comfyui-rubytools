@@ -493,9 +493,9 @@ class StringListPicker:
         return {
             "required": {
                 "lines_text": ("STRING", {"multiline": True, "default": "", "tooltip": "One candidate value per line"}),
-                "mode": (["random_secure", "shuffle_no_repeat", "round_robin", "even_index", "odd_index", "first", "last"], {
+                "mode": (["random_secure", "shuffle_no_repeat", "increment", "decrement", "round_robin", "even_index", "odd_index", "first", "last"], {
                     "default": "shuffle_no_repeat",
-                    "tooltip": "random_secure: CSPRNG pick each run (Python secrets); shuffle_no_repeat: shuffled cycle without repeats; round_robin: deterministic order; even_index/odd_index: random pick from matching parity; first/last: fixed pick"
+                    "tooltip": "random_secure: CSPRNG pick each run (Python secrets); shuffle_no_repeat: shuffled cycle without repeats; increment: first→last in order, cycling; decrement: last→first in order, cycling; round_robin: alias for increment; even_index/odd_index: random pick from matching parity; first/last: fixed pick"
                 }),
             },
             "optional": {
@@ -570,9 +570,13 @@ class StringListPicker:
                 _picker_shuffles[key] = entry
             idx = entry["order"][entry["pos"]]
             entry["pos"] += 1
-        elif mode == "round_robin":
+        elif mode in ("increment", "round_robin"):
             current = _picker_counters.get(key, 0)
             idx = current % len(lines)
+            _picker_counters[key] = current + 1
+        elif mode == "decrement":
+            current = _picker_counters.get(key, 0)
+            idx = (len(lines) - 1) - (current % len(lines))
             _picker_counters[key] = current + 1
         else:
             idx = secrets.randbelow(len(lines))
