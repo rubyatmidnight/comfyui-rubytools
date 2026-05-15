@@ -247,6 +247,124 @@ class MathExpression:
             return (0.0, 0, f"Error: {exc}", False)
 
 
+class RandomInt:
+    """Generate a random integer between min and max (inclusive)."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "min_value": ("INT", {
+                    "default": 0,
+                    "min": -0xffffffffffffffff,
+                    "max": 0xffffffffffffffff,
+                    "tooltip": "Minimum value (inclusive)"
+                }),
+                "max_value": ("INT", {
+                    "default": 100,
+                    "min": -0xffffffffffffffff,
+                    "max": 0xffffffffffffffff,
+                    "tooltip": "Maximum value (inclusive)"
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("value",)
+    FUNCTION = "generate"
+    CATEGORY = "Ruby's Nodes/Utility"
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("nan")
+
+    def generate(self, min_value, max_value):
+        if max_value < min_value:
+            min_value, max_value = max_value, min_value
+        return (random.randint(min_value, max_value),)
+
+
+class RandomFloat:
+    """Generate a random float between min and max."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "min_value": ("FLOAT", {
+                    "default": 0.0,
+                    "min": -1e12,
+                    "max": 1e12,
+                    "step": 0.001,
+                    "tooltip": "Minimum value (inclusive)"
+                }),
+                "max_value": ("FLOAT", {
+                    "default": 1.0,
+                    "min": -1e12,
+                    "max": 1e12,
+                    "step": 0.001,
+                    "tooltip": "Maximum value (inclusive)"
+                }),
+            },
+            "optional": {
+                "decimals": ("INT", {"default": -1, "min": -1, "max": 10,
+                    "tooltip": "Round to this many decimals (-1 = no rounding)"}),
+            }
+        }
+
+    RETURN_TYPES = ("FLOAT",)
+    RETURN_NAMES = ("value",)
+    FUNCTION = "generate"
+    CATEGORY = "Ruby's Nodes/Utility"
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("nan")
+
+    def generate(self, min_value, max_value, decimals=-1):
+        if max_value < min_value:
+            min_value, max_value = max_value, min_value
+        value = random.uniform(min_value, max_value)
+        if decimals >= 0:
+            value = round(value, decimals)
+        return (value,)
+
+
+class RandomHex:
+    """Generate a random hexadecimal string of a given length."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "digits": ("INT", {"default": 8, "min": 1, "max": 256,
+                    "tooltip": "Number of hex digits to generate"}),
+            },
+            "optional": {
+                "uppercase": ("BOOLEAN", {"default": False, "tooltip": "Use uppercase hex letters"}),
+                "prefix_0x": ("BOOLEAN", {"default": False, "tooltip": "Prefix output with 0x"}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING", "INT")
+    RETURN_NAMES = ("hex_string", "int_value")
+    FUNCTION = "generate"
+    CATEGORY = "Ruby's Nodes/Utility"
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return float("nan")
+
+    def generate(self, digits, uppercase=False, prefix_0x=False):
+        max_value = (1 << (digits * 4)) - 1
+        value = random.randint(0, max_value)
+        fmt = f"{{:0{digits}{'X' if uppercase else 'x'}}}"
+        hex_out = fmt.format(value)
+        if prefix_0x:
+            hex_out = "0x" + hex_out
+        return (hex_out, value)
+
+
 class RandomRoll:
     """Roll a random float and compare against a threshold. Returns 1 if roll >= threshold, else 0."""
 
@@ -281,10 +399,16 @@ class RandomRoll:
 
 NODE_CLASS_MAPPINGS = {
     "RubyMathExpression": MathExpression,
+    "RubyRandomInt": RandomInt,
+    "RubyRandomFloat": RandomFloat,
+    "RubyRandomHex": RandomHex,
     "RubyRandomRoll": RandomRoll,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "RubyMathExpression": "Math Expression",
+    "RubyRandomInt": "Random Integer",
+    "RubyRandomFloat": "Random Float",
+    "RubyRandomHex": "Random Hex",
     "RubyRandomRoll": "Random Roll",
 }
