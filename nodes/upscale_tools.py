@@ -10,12 +10,19 @@ import comfy.utils
 import folder_paths
 from comfy import model_management
 
-try:
-    from spandrel import ModelLoader, ImageModelDescriptor
-    _USE_SPANDREL = True
-except ImportError:
-    _USE_SPANDREL = False
-    from comfy_extras.chainner_models import model_loading
+
+def _load_upscale_state_dict(sd):
+    """Lazily import spandrel (or fall back to chainner) so a broken install
+    doesn't crash the whole pack at module load time."""
+    try:
+        from spandrel import ModelLoader, ImageModelDescriptor
+        out = ModelLoader().load_from_state_dict(sd).eval()
+        if not isinstance(out, ImageModelDescriptor):
+            raise Exception("Upscale model must be a single-image model.")
+        return out
+    except ImportError:
+        from comfy_extras.chainner_models import model_loading
+        return model_loading.load_state_dict(sd).eval()
 
 
 class UpscaleModelLoader:
@@ -41,14 +48,7 @@ class UpscaleModelLoader:
         sd = comfy.utils.load_torch_file(model_path, safe_load=True)
         if "module.layers.0.residual_group.blocks.0.norm1.weight" in sd:
             sd = comfy.utils.state_dict_prefix_replace(sd, {"module.": ""})
-
-        if _USE_SPANDREL:
-            out = ModelLoader().load_from_state_dict(sd).eval()
-            if not isinstance(out, ImageModelDescriptor):
-                raise Exception("Upscale model must be a single-image model.")
-        else:
-            out = model_loading.load_state_dict(sd).eval()
-
+        out = _load_upscale_state_dict(sd)
         return (out,)
 
 
