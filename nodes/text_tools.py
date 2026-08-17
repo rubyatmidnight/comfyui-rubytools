@@ -5,9 +5,6 @@ from pathlib import Path
 import hashlib
 import re
 import json
-import os
-import tempfile
-from xml.etree import ElementTree as ET
 
 try:
     import folder_paths as comfy_paths
@@ -87,127 +84,15 @@ def _hash_image(image):
     return hashlib.sha256(data.tobytes()).hexdigest()
 
 
-def _to_text(value):
-    if value is None:
-        return ""
-    if isinstance(value, bytes):
-        return value.decode("utf-8", errors="ignore")
-    return str(value)
+def _hash_file(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def _safe_xml_tag(key):
-    cleaned = re.sub(r"[^A-Za-z0-9_]", "_", key or "")
-    cleaned = cleaned.strip("_")
-    if not cleaned:
-        cleaned = "tag_data"
-    if cleaned[0].isdigit():
-        cleaned = f"_{cleaned}"
-    return cleaned
-
-
-def _merge_xmp_metadata(existing_xmp, metadata_key, metadata_value):
-    xmp_ns = "adobe:ns:meta/"
-    rdf_ns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    ruby_ns = "urn:comfyui:rubytools"
-    ET.register_namespace("x", xmp_ns)
-    ET.register_namespace("rdf", rdf_ns)
-    ET.register_namespace("rubytools", ruby_ns)
-    root = None
-    source = _to_text(existing_xmp).strip()
-    if source:
-        source = re.sub(r"<\?xpacket[^>]*\?>", "", source).strip()
-        try:
-            root = ET.fromstring(source)
-        except Exception:
-            root = None
-    if root is None:
-        root = ET.Element(f"{{{xmp_ns}}}xmpmeta")
-    if root.tag == f"{{{rdf_ns}}}RDF":
-        rdf_node = root
-    else:
-        rdf_node = root.find(f"{{{rdf_ns}}}RDF")
-        if rdf_node is None:
-            rdf_node = ET.SubElement(root, f"{{{rdf_ns}}}RDF")
-    desc_node = rdf_node.find(f"{{{rdf_ns}}}Description")
-    if desc_node is None:
-        desc_node = ET.SubElement(rdf_node, f"{{{rdf_ns}}}Description")
-    xml_key = _safe_xml_tag(metadata_key)
-    item_tag = f"{{{ruby_ns}}}{xml_key}"
-    item_node = desc_node.find(item_tag)
-    if item_node is None:
-        item_node = ET.SubElement(desc_node, item_tag)
-    item_node.text = metadata_value
-    item_node.set(f"{{{ruby_ns}}}source_key", metadata_key)
-    return ET.tostring(root, encoding="utf-8", xml_declaration=False)
-
-
-def _parse_user_comment(raw_value):
-    text = raw_value
-    if isinstance(raw_value, bytes):
-        prefixes = (b"ASCII\x00\x00\x00", b"UNICODE\x00", b"JIS\x00\x00\x00\x00\x00")
-        for prefix in prefixes:
-            if raw_value.startswith(prefix):
-                text = raw_value[len(prefix):]
-                break
-    text = _to_text(text).strip()
-    if not text:
-        return {}
-    try:
-        payload = json.loads(text)
-    except Exception:
-        return {"_legacy_user_comment": text}
-    if isinstance(payload, dict):
-        return payload
-    return {"_legacy_user_comment": text}
-
-
-def _build_png_save_kwargs(image, metadata_key, metadata_value):
-    from PIL import PngImagePlugin
-    pnginfo = PngImagePlugin.PngInfo()
-    for key, value in image.info.items():
-        if key in {"icc_profile", "dpi", "gamma", "transparency", "aspect"}:
-            continue
-        if isinstance(value, bytes):
-            try:
-                value = value.decode("utf-8")
-            except Exception:
-                continue
-        if isinstance(value, str):
-            pnginfo.add_text(key, value)
-    pnginfo.add_text(metadata_key, metadata_value)
-    save_kwargs = {"pnginfo": pnginfo}
-    for keep_key in ("icc_profile", "dpi", "gamma", "transparency"):
-        if keep_key in image.info:
-            save_kwargs[keep_key] = image.info[keep_key]
-    return save_kwargs
-
-
-def _build_jpeg_save_kwargs(image, metadata_key, metadata_value, jpeg_quality):
-    exif_data = image.getexif()
-    user_comment = _parse_user_comment(exif_data.get(0x9286))
-    user_comment[metadata_key] = metadata_value
-    exif_data[0x9286] = json.dumps(user_comment, ensure_ascii=False)
-    save_kwargs = {
-        "quality": jpeg_quality,
-        "exif": exif_data.tobytes(),
-        "xmp": _merge_xmp_metadata(image.info.get("xmp"), metadata_key, metadata_value),
-    }
-    for keep_key in ("icc_profile", "comment", "dpi", "subsampling", "qtables", "optimize"):
-        if keep_key in image.info:
-            save_kwargs[keep_key] = image.info[keep_key]
-    return save_kwargs
-
-
-def _save_image_atomic(image, destination, format_name, save_kwargs):
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=destination.suffix, dir=destination.parent) as tmp_handle:
-        tmp_name = tmp_handle.name
-    try:
-        image.save(tmp_name, format=format_name, **save_kwargs)
-        os.replace(tmp_name, destination)
-    finally:
-        if os.path.exists(tmp_name):
-            os.remove(tmp_name)
+def _resolve_source_path(image_path):
+    src = Path(image_path).expanduser()
+    if not src.is_absolute():
+        src = Path.cwd() / src
+    return src.resolve()
 
 
 class TextLoad:
@@ -413,13 +298,16 @@ class RegexSwitch:
 
 
 class ImageHashCache:
-    """Cache images by content."""
+    """Cache images by content. With image_path, hash is sha256 of file bytes (Hydrus-compatible)."""
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "image": ("IMAGE", {"tooltip": "Image tensor to hash"}),
+            },
+            "optional": {
+                "image_path": ("STRING", {"default": "", "tooltip": "Source file on disk; if set, hash is sha256 of file bytes, not the tensor"}),
             },
         }
 
@@ -432,7 +320,9 @@ class ImageHashCache:
     def IS_CHANGED(cls, image, **kwargs):
         return _hash_image(image)
 
-    def cache(self, image):
+    def cache(self, image, image_path=""):
+        if image_path:
+            return (image, _hash_file(_resolve_source_path(image_path)))
         return (image, _hash_image(image))
 
 
@@ -475,54 +365,73 @@ class AutoTagConcat:
         return (line, str(file_path))
 
 
-class EmbedImageTagsAndIndex:
-    """Embed image tags and append index."""
+class TagManifestAppend:
+    """Append {hash, path, tags} JSONL keyed by file-byte sha256. Never modifies the image."""
+
+    _seen = {}  # manifest path -> set of hashes
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE", {"tooltip": "Passthrough image for downstream Save/Image flow"}),
-                "image_path": ("STRING", {"default": "", "tooltip": "Absolute or relative source image path to embed metadata into"}),
-                "tags": ("STRING", {"default": "", "tooltip": "Tags to embed and index"}),
-                "metadata_key": ("STRING", {"default": "ruby.tags", "tooltip": "Custom metadata key name"}),
-                "index_filepath": ("STRING", {"default": "textfiles/master_taglist.txt", "tooltip": "Relative path under output for master index"}),
+                "image_path": ("STRING", {"default": "", "tooltip": "Source file on disk; hashed as-is"}),
+                "tags": ("STRING", {"default": "", "tooltip": "Comma-separated tag string from tagger"}),
+                "manifest_path": ("STRING", {"default": "textfiles/manifest.jsonl", "tooltip": "Relative path under output"}),
+            },
+            "optional": {
+                "model": ("STRING", {"default": "", "tooltip": "Tagger model name, recorded per line"}),
+                "skip_duplicate_hash": ("BOOLEAN", {"default": True, "tooltip": "Skip write if hash already in manifest"}),
             },
         }
 
-    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING", "BOOLEAN")
-    RETURN_NAMES = ("image", "saved_image_path", "index_path", "index_line", "embedded")
-    FUNCTION = "embed"
+    RETURN_TYPES = ("STRING", "STRING", "STRING")
+    RETURN_NAMES = ("hash", "line", "manifest_path")
+    FUNCTION = "append"
+    OUTPUT_NODE = True
     CATEGORY = "Ruby's Nodes/IO"
 
-    def embed(self, image, image_path, tags, metadata_key="ruby.tags", index_filepath="textfiles/master_taglist.txt"):
-        from PIL import Image
-        src_path = Path(image_path).expanduser()
-        if not src_path.is_absolute():
-            src_path = Path.cwd() / src_path
-        src_path = src_path.resolve()
-        if not src_path.exists():
-            raise FileNotFoundError(f"Missing image: {src_path}")
-        dst_path = src_path
-        suffix = src_path.suffix.lower()
-        if suffix not in {".png", ".jpg", ".jpeg"}:
-            raise ValueError("Only PNG/JPG/JPEG are supported.")
-        with Image.open(src_path) as source_image:
-            if suffix == ".png":
-                save_kwargs = _build_png_save_kwargs(source_image, metadata_key, tags or "")
-                _save_image_atomic(source_image, dst_path, "PNG", save_kwargs)
-            else:
-                work_image = source_image if source_image.mode in {"RGB", "L"} else source_image.convert("RGB")
-                save_kwargs = _build_jpeg_save_kwargs(work_image, metadata_key, tags or "", 100)
-                _save_image_atomic(work_image, dst_path, "JPEG", save_kwargs)
-        index_base = _get_base_dir("output")
-        relative_index_path = (index_filepath or "textfiles/master_taglist.txt").replace("\\", "/")
-        index_path = _safe_join(index_base, relative_index_path)
-        index_path.parent.mkdir(parents=True, exist_ok=True)
-        index_line = f"{dst_path.name}\t{tags or ''}\n"
-        with open(index_path, "a", encoding="utf-8") as handle:
-            handle.write(index_line)
-        return (image, str(dst_path), str(index_path), index_line, True)
+    def _load_seen(self, out):
+        key = str(out)
+        if key not in self._seen:
+            seen = set()
+            if out.exists():
+                with open(out, encoding="utf-8") as handle:
+                    for raw in handle:
+                        raw = raw.strip()
+                        if not raw:
+                            continue
+                        try:
+                            seen.add(json.loads(raw)["hash"])
+                        except (json.JSONDecodeError, KeyError):
+                            pass
+            self._seen[key] = seen
+        return self._seen[key]
+
+    def append(self, image_path, tags, manifest_path, model="", skip_duplicate_hash=True):
+        src = _resolve_source_path(image_path)
+        if not src.exists():
+            raise FileNotFoundError(f"Missing image: {src}")
+        file_hash = _hash_file(src)
+
+        out = _safe_join(_get_base_dir("output"), manifest_path or "textfiles/manifest.jsonl")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        seen = self._load_seen(out)
+
+        if skip_duplicate_hash and file_hash in seen:
+            return (file_hash, "", str(out))
+
+        record = {
+            "hash": file_hash,
+            "path": str(src),
+            "tags": [t.strip() for t in tags.split(",") if t.strip()],
+        }
+        if model:
+            record["model"] = model
+        line = json.dumps(record, ensure_ascii=False) + "\n"
+        with open(out, "a", encoding="utf-8") as handle:
+            handle.write(line)
+        seen.add(file_hash)
+        return (file_hash, line, str(out))
 
 
 NODE_CLASS_MAPPINGS = {
@@ -533,7 +442,8 @@ NODE_CLASS_MAPPINGS = {
     "RubyRegexSwitch": RegexSwitch,
     "RubyImageHashCache": ImageHashCache,
     "RubyAutoTagConcat": AutoTagConcat,
-    "RubyEmbedImageTagsAndIndex": EmbedImageTagsAndIndex,
+    "RubyTagManifestAppend": TagManifestAppend,
+    "RubyEmbedImageTagsAndIndex": TagManifestAppend,  # legacy alias; embed-in-place removed
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -544,5 +454,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RubyRegexSwitch": "Regex Switch",
     "RubyImageHashCache": "Image Hash Cache",
     "RubyAutoTagConcat": "Auto Tag Concat",
-    "RubyEmbedImageTagsAndIndex": "Embed Image Tags + Index",
+    "RubyTagManifestAppend": "Tag Manifest Append (JSONL)",
+    "RubyEmbedImageTagsAndIndex": "Tag Manifest Append (legacy alias)",
 }
