@@ -49,6 +49,17 @@ If you want the nanoruby (NanoGPT nodes) then you can find them in their own rep
 - Math Expression  
   Evaluate safe custom math expressions with named inputs.
 
+### Video:
+#### PyAV-backed frame extraction, with NVDEC hardware decode when the GPU and codec allow it. Requires `av` (`pip install av`).
+- Video Frame Extract  
+  Decode a video into an IMAGE batch, keeping every Nth frame, optionally saving to disk as it goes.
+
+- Video Frames To Disk  
+  Bulk-extract one video or a whole folder straight to PNG/JPG/WEBP with a threaded writer pool.
+
+- Video Endpoint Frames  
+  Grab the first and last frame of a video.
+
 ### String/Json Utilities:
 - Integer to String: `1 -> "1"`
 - Float to String: `0.5 -> "0.5"`
@@ -197,6 +208,35 @@ Returns:
 - `Embed Image Tags + Index`: minimal inputs (`image`, `image_path`, `tags`, `metadata_key`, `index_filepath`).
 - `Embed Image Tags + Index`: supports `.png`, `.jpg`, `.jpeg`; appends `filename<TAB>tags` into `output/<index_filepath>`.
 
+### Video Frame Notes
+
+All three nodes use PyAV. Install it into ComfyUI's python with `pip install av`; the rest of the
+pack keeps working without it, the video nodes just raise a clear error when they run.
+
+Hardware decode: `use_hwaccel` tries NVDEC for `h264`/`hevc` and silently falls back to CPU decode
+when CUDA, the codec, or the PyAV build can't do it. The console line for each video prints
+`HW: NVDEC` or `HW: CPU` so you can tell which path ran.
+
+Paths: `video_path` / `source_path` accept an absolute path, or a relative one resolved against
+ComfyUI's `input` folder. Output folders are relative to ComfyUI's `output` folder unless absolute.
+`randomize_subfolder` reproduces the original script's behaviour, a random hex subfolder whose name
+also prefixes every frame file; turn it off to use the video's own name instead.
+
+- `Video Frame Extract`: returns an IMAGE batch plus `frame_count`, `fps`, and the save folder.
+- `Video Frame Extract`: `step` keeps every Nth frame (`30` is about one per second on 30fps footage),
+  `start_frame` skips ahead, `max_frames` caps the batch. The whole batch is held in RAM, so
+  `max_frames` defaults to 64; set it to 0 only when you know the video is short.
+- `Video Frame Extract`: frames must all be the same size to form one batch; variable-resolution
+  files raise an error and should go through `Video Frames To Disk` instead.
+- `Video Frames To Disk`: point `source_path` at a file or a folder; `extensions` filters folder scans
+  and `parallel_videos` decodes several videos at once. Returns a per-file summary and the total count.
+- `Video Frames To Disk`: `skip_existing` leaves frames already on disk alone, so an interrupted run
+  can be resumed (keep `randomize_subfolder` off for that, otherwise each run gets a new folder).
+- `Video Endpoint Frames`: always outputs both endpoints; `save_which` only controls what gets written.
+  The last frame comes from a seek to the end, with a full-decode fallback for short or odd files.
+- All three respect ComfyUI's progress bar and cancel button, and re-run when the source file changes
+  on disk even if the widget values are identical.
+
 ### Crypto / Hash Utility Notes
 
 - `Hash: SHA-256`: returns both hex and base64 digest from input text.
@@ -225,3 +265,5 @@ initial release
 combined sets
 ### v0.9.0
 Split nanoruby into a nanogpt repo and a rubytools repo. This is rubytools
+### v0.9.1
+Added video frame extraction nodes (PyAV + optional NVDEC)
