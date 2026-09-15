@@ -1,3 +1,6 @@
 presets.json
 __pycache__/
 nodes/__pycache__/
+pager.json
+kokoro.json
+__pycache__/
