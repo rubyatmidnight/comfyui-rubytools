@@ -60,6 +60,25 @@ If you want the nanoruby (NanoGPT nodes) then you can find them in their own rep
 - Video Endpoint Frames  
   Grab the first and last frame of a video.
 
+### Audio:
+#### Homebrew Kokoro TTS on the local ONNX model. Requires `kokoro-onnx` (`pip install kokoro-onnx`) plus the model files.
+- Kokoro TTS (local)  
+  Speak text with any installed Kokoro voice, with optional two-voice blending. Outputs ComfyUI AUDIO.
+
+- Kokoro Voice List  
+  List the voices found in the installed voices file, filtered by prefix.
+
+### Pager:
+#### Paper notes to a thermal printer. The node writes into an inbox folder; a small daemon prints whatever lands there.
+- Pager: Send Page  
+  Queue a text note and/or an image for the pager daemon, optionally waiting until it prints.
+
+### Frontend:
+- Auto Bookmarks  
+  Pre-selects the "Bookmarked" chip whenever the node search popover opens, so typed searches are scoped to
+  your bookmarks until you deselect it. Needs at least one bookmarked node. Shows up under Settings > Extensions
+  as `rubytools.autobookmarks`.
+
 ### String/Json Utilities:
 - Integer to String: `1 -> "1"`
 - Float to String: `0.5 -> "0.5"`
@@ -237,6 +256,36 @@ also prefixes every frame file; turn it off to use the video's own name instead.
 - All three respect ComfyUI's progress bar and cancel button, and re-run when the source file changes
   on disk even if the widget values are identical.
 
+### Kokoro TTS Notes
+- Model files come from the kokoro-onnx releases: `kokoro-v1.0.onnx` and `voices-v1.0.bin`. The node looks for
+  them in, in order: the `model_dir` input, the `KOKORO_MODEL_DIR` environment variable, `model_dir` in
+  `nodes/kokoro.json` (copy `kokoro.example.json`), then `ComfyUI/models/kokoro/`.
+- `provider` picks the ONNX Runtime backend. `auto` prefers CUDA, then DirectML, then CPU, depending on which
+  onnxruntime build is installed. CPU is fine for short clips: a sentence takes a few seconds.
+  For CUDA, install `onnxruntime-gpu` in place of `onnxruntime` (matching your CUDA major version). The node
+  preloads cuDNN from torch's own lib folder, so no separate cuDNN install is needed when torch is CUDA-enabled.
+  On a GPU a sentence takes a fraction of a second after the one-time model load.
+- The voice dropdown is read from the voices file, so it matches what is installed. `blend_voice` mixes a second
+  voice's style vector into the first; `blend_amount` 0 is all first voice, 1 is all blend voice.
+- `text_is_phonemes` skips espeak and feeds IPA straight to the model. `sentence_pause` and `clause_pause`
+  are the silences inserted at sentence ends and at commas.
+- Output is 24 kHz mono AUDIO, so it connects directly to the core Save Audio and Preview Audio nodes.
+  The model stays loaded between runs; switching provider or model folder reloads it.
+
+### Pager Notes
+- The node only writes files. Anything that watches the inbox folder and prints what shows up completes the
+  loop. `examples/pager/pager_daemon_example.py` is a working sample daemon: set `PRINT_COMMAND` to whatever
+  prints a PNG on your printer (a vendor CLI, `lp`, an ESC/POS script) and run it next to the inbox.
+- Inbox location, in order: the `inbox_path` input, the `RUBY_PAGER_INBOX` environment variable, then `inbox`
+  in `nodes/pager.json` (copy `pager.example.json`). `log` in the same file points at the daemon's `pager.jsonl`
+  when it is not next to the inbox.
+- Text pages are written as `From:` / `Icon:` headers, a blank line, then the body. Images are scaled to
+  384 px wide (a 57 mm strip), converted to 1-bit with optional dithering, and queued as their own page.
+- `always_send` is on by default so the page goes out on every run; turn it off to let ComfyUI's cache skip
+  re-sending unchanged inputs.
+- `wait_for_print` tails the daemon log and reports `printed`, `print_failed`, `render_failed` or `timeout`
+  per file. Files are timestamped with a short random tag so pages sent in the same second never collide.
+
 ### Crypto / Hash Utility Notes
 
 - `Hash: SHA-256`: returns both hex and base64 digest from input text.
@@ -267,3 +316,5 @@ combined sets
 Split nanoruby into a nanogpt repo and a rubytools repo. This is rubytools
 ### v0.9.1
 Added video frame extraction nodes (PyAV + optional NVDEC)
+### v0.9.2
+Added Kokoro TTS (local ONNX) nodes and the Pager node with a sample inbox daemon
